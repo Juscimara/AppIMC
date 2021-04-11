@@ -8,85 +8,192 @@ class CalculoImcWidget extends StatefulWidget {
 }
 
 class _CalculoImcWidgetState extends State<CalculoImcWidget> {
-  GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+   int valor = 1;
+  int tipo = 1;
+  GlobalKey<FormState> formulario = GlobalKey<FormState>();
   TextEditingController alturaController = TextEditingController();
   TextEditingController pesoController = TextEditingController();
+  TextEditingController circunferenciaController = TextEditingController();
+  String resultado_imc;
+  String resultado_iac;
 
-  String _resultadoImc;
-
-  void calcularImc() {
-    double altura = double.parse(alturaController.text) / 100;
-    double peso = double.parse(pesoController.text);
-
-    double imc = peso / pow(altura, 2);
-
+  void _radioValueHandler(int value) {
     setState(() {
-      _resultadoImc = imc.toStringAsFixed(2) + "\n\n" + getClassificacao(imc);
+      resultado_iac = null;
+      resultado_imc = null;
+      valor = value;
+    });
+  }
+
+  void _radioTypeHandler(int value) {
+    setState(() {
+      resultado_iac = null;
+      resultado_imc = null;
+      tipo = value;
+    });
+  }
+
+  void calculo_Imc() {
+    double altura = double.parse(alturaController.text) / 100.0;
+    double peso = double.parse(pesoController.text);
+    double imc = peso / pow(altura, 2);
+    setState(() {
+      resultado_imc = imc.toStringAsFixed(2) + "\n\n" + getClassificacao(imc);
+    });
+  }
+
+  void calculo_Iac() {
+    double altura = double.parse(alturaController.text) / 100.0;
+    double circunferencia = double.parse(circunferenciaController.text);
+    double iac = (circunferencia / (altura * sqrt(altura))) - 18;
+    setState(() {
+      resultado_imc = null;
+      resultado_iac = iac.toStringAsFixed(2) + "\n\n" + getClassificacao(iac);
     });
   }
 
   String getClassificacao(num imc) {
-    String classificacao;
+    String strClassificacao = "";
 
-    if (imc < 18.6)
-      classificacao = "Abaixo do peso";
-    else if (imc < 25)
-      classificacao = "Peso ideal";
-    else if (imc < 30)
-      classificacao = "Levemente abaixo de peso";
-    else if (imc < 35)
-      classificacao = "Obesidade grau I";
-    else if (imc < 40)
-      classificacao = "Obesidade grau II";
-    else
-      classificacao = "Obesidade grau III";
+    if (valor == 1) {
+      if (imc < 20) {
+        strClassificacao = "Abaixo do peso";
+      } else if (imc < 26.4) {
+        strClassificacao = "Peso Ideal!";
+      } else if (imc < 27.8) {
+        strClassificacao = "Levemente acima do peso";
+      } else if (imc < 31.1) {
+        strClassificacao = "Acima do Peso";
+      } else if (imc > 31.1) {
+        strClassificacao = "Obesidade";
+      }
+    } else {
+      if (imc < 18.5) {
+        strClassificacao = "Abaixo do peso";
+      } else if (imc < 24.9) {
+        strClassificacao = "Peso Ideal!";
+      } else if (imc < 29.9) {
+        strClassificacao = "Levemente acima do peso";
+      } else if (imc < 34.9) {
+        strClassificacao = "Obesidade grau I";
+      } else if (imc < 39.9) {
+        strClassificacao = "Obesidade grau II";
+      } else {
+        strClassificacao = "Obesidade grau III";
+      }
+    }
 
-    return classificacao;
+    return strClassificacao;
   }
 
   @override
   Widget build(BuildContext context) {
     return Form(
-      key: _formKey,
+      key: formulario,
       child: Container(
         child: Column(
           children: [
             Container(
+              margin: EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 6),
+              child: Column(children: [
+                Row(
+                  children: [
+                    Radio(
+                      value: 0,
+                      groupValue: tipo,
+                      onChanged: _radioTypeHandler,
+                    ),
+                    new Text("IMC"),
+                    Radio(
+                      value: 1,
+                      groupValue: tipo,
+                      onChanged: _radioTypeHandler,
+                    ),
+                    new Text("IAC")
+                  ],
+                ),
+                Row(
+                  children: [
+                    Radio(
+                      value: 0,
+                      groupValue: valor,
+                      onChanged: _radioValueHandler,
+                    ),
+                    new Text("Masculino"),
+                    Radio(
+                      value: 1,
+                      groupValue: valor,
+                      onChanged: _radioValueHandler,
+                    ),
+                    new Text("Feminino")
+                  ],
+                ),
+              ]),
+            ),
+            Container(
               margin: EdgeInsets.all(16),
               child: TextFormField(
                 keyboardType: TextInputType.number,
+                //Altura
                 controller: alturaController,
                 validator: (value) {
-                  return value.isEmpty ? "Informe a altura" : null;
+                  return value.isEmpty ? "altura" : null;
                 },
                 decoration: InputDecoration(
-                  labelText: "Altura em cm",
+                  labelText: "Digite sua a altura em cm:",
                 ),
               ),
             ),
-            Container(
-              margin: EdgeInsets.all(16),
-              child: TextFormField(
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  return value.isEmpty ? "Informe o peso" : null;
-                },
-                controller: pesoController,
-                decoration: InputDecoration(
-                  labelText: "Peso em Kg",
+            Visibility(
+              child: Container(
+                margin: EdgeInsets.all(16),
+                child: TextFormField(
+                  keyboardType: TextInputType.number,
+                  controller: pesoController,
+                  validator: (value) {
+                    return value.isEmpty ? "peso" : null;
+                  },
+                  decoration: InputDecoration(
+                    labelText: "Digite seu peso em Kg:",
+                  ),
                 ),
               ),
+              visible: tipo == 0,
+            ),
+            Visibility(
+              child: Container(
+                margin: EdgeInsets.all(16),
+                child: TextFormField(
+                  keyboardType: TextInputType.number,
+                  controller: circunferenciaController,
+                  validator: (value) {
+                    return value.isEmpty ? "circunferência do quadril" : null;
+                  },
+                  decoration: InputDecoration(
+                      labelText: "Informe a circunferência do quadril:"),
+                ),
+              ),
+              visible: tipo == 1,
             ),
             Container(
               margin: EdgeInsets.all(16),
-              child: Text(_resultadoImc == null ? "" : "IMC $_resultadoImc"),
+              child: Text(resultado_imc == null
+                  ? resultado_iac == null
+                      ? ""
+                      : "Seu IAC é = $resultado_iac"
+                  : "Seu IMC é = $resultado_imc",
+                  style: TextStyle(fontSize: 25, color: Colors.blue),
+              ),                  
             ),
             Container(
               margin: EdgeInsets.all(16),
               child: ElevatedButton(
                 onPressed: () {
-                  if (_formKey.currentState.validate()) {
-                    calcularImc();
+                  if (formulario.currentState.validate()) {
+                    if (tipo == 0)
+                      calculo_Imc();
+                    else
+                      calculo_Iac();
                   }
                 },
                 child: Text("Calcular"),
